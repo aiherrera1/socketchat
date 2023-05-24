@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
   // al respecto
   while (1) {
     int msg_code = client_receive_id(server_socket);
+    printf("Mesage Code: %d\n", msg_code);
 
     if (msg_code == 0) { // Servidor envía mensaje de conexión inicial
       char *message = client_receive_payload(server_socket);
@@ -75,7 +76,6 @@ int main(int argc, char *argv[]) {
       client_send_chat(server_socket, response);
     }
     if (msg_code == 4) {
-      printf("HIIIII\n");
       char *message = client_receive_file_payload(server_socket);
 
       FILE *output_file = fopen("reconstructed_image.png", "wb");
@@ -97,17 +97,48 @@ int main(int argc, char *argv[]) {
       }
 
       printf("--------------------------\n");
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < (unsigned char)message[1]; i++) {
         int chunkSize = (unsigned char)message[2 + i * 256];
-        printf("chunkSize: %02X\n", (unsigned char)chunkSize);
-        printf("chunkSize: %d\n", chunkSize);
         fwrite(&message[3 + i * 256], 1, chunkSize, output_file);
+      }
 
-        // Print bytes written to the file
-        for (int j = 0; j < chunkSize; j++) {
-          printf("%02X ", (unsigned char)message[3 + i * 256 + j]);
+      fclose(output_file);
+      printf("¿Qué desea hacer?\n   1)Enviar mensaje al servidor\n   2)Enviar "
+             "mensaje al otro cliente\n");
+      int option = getchar() - '0';
+      getchar(); // Para capturar el "enter" que queda en el buffer de entrada
+                 // stdin
+
+      printf("Ingrese su mensaje: ");
+      char *response = get_input();
+
+      client_send_chat(server_socket, response);
+    }
+    if (msg_code == 5) {
+      char *message = client_receive_audio_payload(server_socket);
+
+      FILE *output_file = fopen("reconstructed_audio.mp3", "wb");
+      if (output_file == NULL) {
+        printf("Failed to create the output file.\n");
+      } else {
+        printf("Output file created successfully.\n");
+      }
+
+      printf("chunk size: %02X\n", (unsigned char)message[1]);
+      int x;
+      for (x = 0; x < 2 + 1 * 256; x++) {
+        printf(
+            "%02X ",
+            (unsigned char)message[x]); // Print each byte in hexadecimal format
+        if ((x + 1) % 16 == 0) {
+          printf("\n"); // Print a new line after every 16 bytes
         }
-        printf("\n");
+      }
+
+      printf("--------------------------\n");
+      for (int i = 0; i < (unsigned char)message[1]; i++) {
+        int chunkSize = (unsigned char)message[2 + i * 256];
+        fwrite(&message[3 + i * 256], 1, chunkSize, output_file);
       }
 
       fclose(output_file);

@@ -72,36 +72,19 @@ int main(int argc, char *argv[]) {
       char *client_message =
           server_receive_file_payload(sockets_array[my_attention]);
 
-      // int x;
-      // for (x = 0; x < 2 + 10 * 256; x++) {
-      //   printf("%02X ",
-      //          client_message[x]); // Print each byte in hexadecimal format
-      //   if ((x + 1) % 16 == 0) {
-      //     printf("\n"); // Print a new line after every 16 bytes
-      //   }
-      // }
-      // FILE *output_file = fopen("reconstructed_image.png", "wb");
-      // if (output_file == NULL) {
-      //   printf("Failed to create the output file.\n");
-      // }
-      printf("chuck size: %02X\n", client_message[1]);
-
-      // for (int i = 0; i < 10; i++) {
-      //   int chunkSize = client_message[2 + i * 256];
-      //   printf("chunkSize: %02X\n", chunkSize);
-      //   fwrite(&client_message[3 + i * 255], 1, chunkSize, output_file);
-      // }
-      //
-      // fclose(output_file);
-
-      // printf("El cliente %d dice: %s\n", my_attention + 1, client_message);
-      //
       my_attention = (my_attention + 1) % 2;
       //
       server_send_file(sockets_array[my_attention], 3, client_message);
     } else if (msg_code ==
                ID_SEND_AUDIO) // El cliente le envía un audio al otro cliente
     {
+
+      char *client_message =
+          server_receive_audio_payload(sockets_array[my_attention]);
+
+      my_attention = (my_attention + 1) % 2;
+      //
+      server_send_file(sockets_array[my_attention], 3, client_message);
     } else if (msg_code == ID_QUIT) // El cliente quiere salir de la sala
     {
       printf("El cliente %d quiere salir de la sala\n", my_attention + 1);

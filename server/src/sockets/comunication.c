@@ -46,6 +46,24 @@ char *server_receive_file_payload(int client_socket) {
   return payload;
 }
 
+char *server_receive_audio_payload(int client_socket) {
+  // Obtain the length of the payload
+  int len = 0;
+  recv(client_socket, &len, 1, 0);
+
+  printf("len: %d\n", len);
+  // Obtain the payload
+  char *payload = malloc((len * 256) + 2);
+  int received = recv(client_socket, payload + 2, len * 256, 0);
+
+  payload[0] = ID_SEND_AUDIO;
+  payload[1] = len;
+  // Store the ID and numChunks values in the payload
+  // payload[1] = len;
+
+  // Return the payload
+  return payload;
+}
 void server_send_message(int client_socket, int pkg_id, char *message) {
   int payloadSize = strlen(message) + 1;
   // printf("payload size: %d\n", payloadSize);
@@ -59,7 +77,7 @@ void server_send_message(int client_socket, int pkg_id, char *message) {
 }
 
 void server_send_file(int client_socket, int pkg_id, char *message) {
-  printf("size: %d\n", message[1]);
+  printf("size: %d\n", (unsigned char)message[1]);
 
   int numChunks = message[1];
   int x;

@@ -59,13 +59,23 @@ void server_send_message(int client_socket, int pkg_id, char *message) {
 }
 
 void server_send_file(int client_socket, int pkg_id, char *message) {
-  int payloadSize = strlen(message) + 1;
+  printf("size: %d\n", message[1]);
+
+  int numChunks = message[1];
+  int x;
+  for (x = 0; x < 2 + 1 * 256; x++) {
+    printf("%02X ",
+           (unsigned char)message[x]); // Print each byte in hexadecimal format
+    if ((x + 1) % 16 == 0) {
+      printf("\n"); // Print a new line after every 16 bytes
+    }
+  }
   // printf("payload size: %d\n", payloadSize);
   //  Se arma el paquete
-  char msg[1 + 1 + payloadSize];
-  msg[0] = pkg_id;
-  msg[1] = payloadSize;
-  memcpy(&msg[2], message, payloadSize);
-  // Se envía el paquete
-  send(client_socket, msg, 2 + payloadSize, 0);
+  // char msg[payloadSize];
+  // // msg[0] = pkg_id;
+  // // msg[1] = payloadSize;
+  // memcpy(msg, message, payloadSize);
+  // // Se envía el paquete
+  send(client_socket, message, numChunks * 256 + 2, 0);
 }

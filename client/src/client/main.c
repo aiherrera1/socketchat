@@ -74,6 +74,54 @@ int main(int argc, char *argv[]) {
 
       client_send_chat(server_socket, response);
     }
+    if (msg_code == 4) {
+      printf("HIIIII\n");
+      char *message = client_receive_file_payload(server_socket);
+
+      FILE *output_file = fopen("reconstructed_image.png", "wb");
+      if (output_file == NULL) {
+        printf("Failed to create the output file.\n");
+      } else {
+        printf("Output file created successfully.\n");
+      }
+
+      printf("chunk size: %02X\n", (unsigned char)message[1]);
+      int x;
+      for (x = 0; x < 2 + 1 * 256; x++) {
+        printf(
+            "%02X ",
+            (unsigned char)message[x]); // Print each byte in hexadecimal format
+        if ((x + 1) % 16 == 0) {
+          printf("\n"); // Print a new line after every 16 bytes
+        }
+      }
+
+      printf("--------------------------\n");
+      for (int i = 0; i < 10; i++) {
+        int chunkSize = (unsigned char)message[2 + i * 256];
+        printf("chunkSize: %02X\n", (unsigned char)chunkSize);
+        printf("chunkSize: %d\n", chunkSize);
+        fwrite(&message[3 + i * 256], 1, chunkSize, output_file);
+
+        // Print bytes written to the file
+        for (int j = 0; j < chunkSize; j++) {
+          printf("%02X ", (unsigned char)message[3 + i * 256 + j]);
+        }
+        printf("\n");
+      }
+
+      fclose(output_file);
+      printf("¿Qué desea hacer?\n   1)Enviar mensaje al servidor\n   2)Enviar "
+             "mensaje al otro cliente\n");
+      int option = getchar() - '0';
+      getchar(); // Para capturar el "enter" que queda en el buffer de entrada
+                 // stdin
+
+      printf("Ingrese su mensaje: ");
+      char *response = get_input();
+
+      client_send_chat(server_socket, response);
+    }
     printf("------------------\n");
   }
 

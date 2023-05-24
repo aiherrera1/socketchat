@@ -23,6 +23,24 @@ char *client_receive_payload(int client_socket) {
   // Se retorna
   return payload;
 }
+char *client_receive_file_payload(int client_socket) {
+  // Obtain the length of the payload
+  int len = 0;
+  recv(client_socket, &len, 1, 0);
+
+  printf("len: %d\n", len);
+  // Obtain the payload
+  char *payload = malloc((len * 256) + 2);
+  int received = recv(client_socket, payload + 2, len * 256, 0);
+
+  payload[0] = ID_SEND_IMAGE;
+  payload[1] = len;
+  // Store the ID and numChunks values in the payload
+  // payload[1] = len;
+
+  // Return the payload
+  return payload;
+}
 
 void client_send_message(int client_socket, int pkg_id, char *message) {
   int payloadSize = strlen(message) + 1; //+1 para considerar el caracter nulo.
@@ -89,7 +107,9 @@ void client_send_chat(int client_socket, char *message) {
                             image_file); // Read the chunk content
 
       header[2 + i * 256] =
-          chunkSize; // Set the number of bytes used in the chunk
+          (unsigned char)chunkSize; // Set the number of bytes used in the chunk
+      printf("chunksize: %d\n", chunkSize);
+      printf("stored chunksize: %02X \n", (unsigned char)header[2 + i * 256]);
 
       // Fill the remaining unused bytes with 0
       int unusedBytes = 255 - chunkSize;
@@ -102,7 +122,8 @@ void client_send_chat(int client_socket, char *message) {
     printf("-------------------------------\n");
     int x;
     for (x = 0; x < 2 + numChunks * 256; x++) {
-      printf("%02X ", header[x]); // Print each byte in hexadecimal format
+      printf("%02X ",
+             (unsigned char)header[x]); // Print each byte in hexadecimal format
       if ((x + 1) % 16 == 0) {
         printf("\n"); // Print a new line after every 16 bytes
       }
